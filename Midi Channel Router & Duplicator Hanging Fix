@@ -68,7 +68,7 @@ while
   midirecv(offset,msg1,note,vel) ?
   (
     // Extract message type and channel
-    note = msg23&$x7F;
+    note2 = msg23&$x7F;
     status = msg1 & $xF0;
     channel = msg1 & $x0F;
     status = msg1&$xF0; //StatusByte with Channel
@@ -86,7 +86,7 @@ while
         
           chan_out = i - 3; // 
           
-         playednotes[note] = channel+1; //add one to the channel so unplayed slots will be zero
+         playednotes[note2] = channel+1; //add one to the channel so unplayed slots will be zero
          
           msg1 =  status + chan_out;
          
@@ -95,9 +95,9 @@ while
           //Check if we have recieved a note off message.
             statusLo == 8 || velocity==0 ? (
             //if the slot in is true (>0) it means this note on has been played so retrieve original channel
-                          (playednotes[note]) > 0 ? (
+                          (playednotes[note2]) > 0 ? (
                     
-                              msg1 = status + (playednotes[note])-1;
+                              msg1 = status + (playednotes[note2])-1;
                               playednotes[note]=0; //reset the slot
                               
                           ):(
