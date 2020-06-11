@@ -45,7 +45,7 @@ in_pin: none
 out_pin: none
 
 ////////////////////////////////////////////////////////////////////////////////
-@serialize //fixes hanging note issues when changing while note on
+@serialize //Channel value is no longer reset with sample rate change or start/stop playback.
 file_var(0,channel);
 channel = file_mem(0,0,0);
 
