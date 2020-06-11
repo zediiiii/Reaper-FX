@@ -1,5 +1,5 @@
 /**
- * JSFX Name: MIDI CC Channel Router Note Edition
+ * JSFX Name: MIDI Channel Router & Duplicator
  * Description: Route ALL Midi data from input one/any to ANY combination of midi channels 1-16. 
  *              Extremely useful for VSTi articulation swapping
  * Screenshot: https://i.imgur.com/ve4YpmO.png
