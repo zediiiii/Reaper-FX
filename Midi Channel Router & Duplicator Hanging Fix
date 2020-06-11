@@ -1,0 +1,129 @@
+/**
+ * JSFX Name: MIDI Channel Router & Duplicator
+ * Description: Route ALL Midi data from input one/any to ANY combination of midi channels 1-16. 
+ *              Extremely useful for VSTi articulation swapping
+ * Screenshot: https://i.imgur.com/ve4YpmO.png
+ * Author: X-Raym (one line modified by zediiiii)
+ * Author URI: http://www.extremraym.com
+ * Links:
+     Forum Thread https://forum.cockos.com/showthread.php?t=199275
+ * Donation: http://www.extremraym.com/en/donation
+ * Licence: GPL v3
+ * REAPER: 5.0
+ * Extensions: None
+ * Version: 1.0
+ */
+
+/**
+ * Changelog:
+ * v1.0 (2017-11-08)
+  + Initial Release
+ */
+
+desc:MIDI NOTE Channel Router
+
+slider1:0<0,16,1{Any,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input Channel
+
+slider3:0<1,0,1{OFF,ON}>Output Channel 1
+slider4:0<1,0,1{OFF,ON}>Output Channel 2
+slider5:0<1,0,1{OFF,ON}>Output Channel 3
+slider6:0<1,0,1{OFF,ON}>Output Channel 4
+slider7:0<1,0,1{OFF,ON}>Output Channel 5
+slider8:0<1,0,1{OFF,ON}>Output Channel 6
+slider9:0<1,0,1{OFF,ON}>Output Channel 7
+slider10:0<1,0,1{OFF,ON}>Output Channel 8
+slider11:0<1,0,1{OFF,ON}>Output Channel 9
+slider12:0<1,0,1{OFF,ON}>Output Channel 10
+slider13:0<1,0,1{OFF,ON}>Output Channel 11
+slider14:0<1,0,1{OFF,ON}>Output Channel 12
+slider15:0<1,0,1{OFF,ON}>Output Channel 13
+slider16:0<1,0,1{OFF,ON}>Output Channel 14
+slider17:0<1,0,1{OFF,ON}>Output Channel 15
+slider18:0<1,0,1{OFF,ON}>Output Channel 16
+
+in_pin: none
+out_pin: none
+
+////////////////////////////////////////////////////////////////////////////////
+@serialize //Channel value is no longer reset with sample rate change or start/stop playback.
+file_var(0,channel);
+channel = file_mem(0,0,0);
+
+////////////////////////////////////////////////////////////////////////////////
+@init
+statNoteOn = $x90;
+statNoteOff = $x80;
+CC_MSG = 11;
+
+////////////////////////////////////////////////////////////////////////////////
+@slider
+inChannel = slider1 - 1;
+
+////////////////////////////////////////////////////////////////////////////////
+@block
+
+while
+(
+
+  midirecv(offset,msg1,note,vel) ?
+  (
+    // Extract message type and channel
+    note = msg23&$x7F;
+    status = msg1 & $xF0;
+    channel = msg1 & $x0F;
+    status = msg1&$xF0; //StatusByte with Channel
+    statusLo = (msg1/16)|0; //Just the Status
+    velocity = (msg23/256)&$xff;
+    
+
+    statusLo ==9  &&  (channel == inChannel || inChannel == -1) ? //if event is note on &&  on channel = inChannel or all
+    ( 
+      i = 3;
+      
+      loop(16,
+      
+        slider( i ) == 1 ? (
+        
+          chan_out = i - 3; // 
+          
+         playednotes[note] = channel+1; //add one to the channel so unplayed slots will be zero
+         
+          msg1 =  status + chan_out;
+         
+         
+         //hanging 
+          //Check if we have recieved a note off message.
+            statusLo == 8 || velocity==0 ? (
+            //if the slot in is true (>0) it means this note on has been played so retrieve original channel
+                          (playednotes[note]) > 0 ? (
+                    
+                              msg1 = status + (playednotes[note])-1;
+                              playednotes[note]=0; //reset the slot
+                              
+                          ):(
+                              msg1 = status + channel;  //else route to new MIDI Channel
+                          );
+                     ):(
+                         msg1 = status + channel; //route to new MIDI channel for all non-note off events
+                     );
+            
+                
+                     midisend(offset, msg1, msg23); // Send message on with channel adjustment
+
+
+
+          //end hangig
+         
+        //midisend(offset, msg1, note, vel); 
+        );
+        
+        i = i + 1;
+      
+      );
+ 
+    );
+
+    1; // Force loop to continue until all messages have been processed
+  
+  );
+);
