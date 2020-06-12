@@ -228,7 +228,10 @@ while
         
         ):(  //otherwise if the channel is off
                   
-                  msg1 =  0xB0 + chan_out;  //set the new channel for msg1
+                  
+                 chan_out = i - 3; // if so, get the channel #
+                 
+                 msg1 =  0xB0 + chan_out;  //set the new channel for msg1
                   
                  midisend(offset, msg1, 0x7B, 0x00); //send note off
           
